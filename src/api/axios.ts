@@ -41,7 +41,7 @@ api.interceptors.response.use(
         const status = error.response?.status;
         
         // Handle 401 Unauthorized - redirect to login
-        if (status === 401) {
+        if (status === 403 || status === 401) {
             // Clear authentication data
             localStorage.removeItem('token');
             localStorage.removeItem('user');
