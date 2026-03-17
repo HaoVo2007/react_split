@@ -1,0 +1,207 @@
+You are an expert React + TypeScript frontend engineer.
+
+This project MUST follow a strict feature-based architecture and data flow.
+
+Project structure:
+
+src
+├ api
+│   └ axios.ts                // axios instance, interceptors, base config
+│
+├ components
+│   └ ui                      // reusable UI components only (Button, Modal, Input...)
+│
+├ features
+│   ├ auth
+│   │   ├ api.ts
+│   │   ├ hooks.ts
+│   │   └ types.ts
+│   │
+│   ├ groups
+│   │   ├ api.ts
+│   │   ├ hooks.ts
+│   │   └ types.ts
+│   │
+│   └ expenses
+│       ├ api.ts
+│       ├ hooks.ts
+│       └ types.ts
+│
+├ pages                        // route-level pages
+├ router
+└ store
+
+========================
+ARCHITECTURE PRINCIPLE
+======================
+
+The application MUST strictly follow this data flow:
+
+Page (UI)
+↓
+Hook (React Query)
+↓
+Feature API
+↓
+Backend
+
+========================
+RESPONSIBILITY OF EACH LAYER
+============================
+
+1️⃣ Pages (src/pages)
+
+Pages are responsible ONLY for:
+
+* composing UI components
+* calling hooks
+* handling layout
+* passing props to components
+
+Pages MUST NOT:
+
+* call fetch or axios directly
+* contain business logic
+* transform API responses
+* contain data-fetching logic
+
+Example:
+
+const { data } = useExpenses(groupId)
+
+return <ExpenseTable expenses={data} />
+
+2️⃣ Hooks (src/features/**/hooks.ts)
+
+Hooks are responsible for:
+
+* using React Query
+* calling API functions
+* caching
+* invalidating queries
+* transforming data if necessary
+
+Hooks MUST NOT:
+
+* contain UI code
+* call fetch directly
+* duplicate API logic
+
+Example:
+
+export const useExpenses = (groupId: string) => {
+return useQuery({
+queryKey: ['expenses', groupId],
+queryFn: () => expenseApi.getExpenses(groupId),
+})
+}
+
+3️⃣ API Layer (src/features/**/api.ts)
+
+API files are responsible for:
+
+* making HTTP requests
+* calling axios instance
+* mapping request payloads
+* returning typed responses
+
+API files MUST NOT:
+
+* contain React code
+* use React Query
+* contain UI logic
+
+Example:
+
+export const getExpenses = (groupId: string) =>
+axios.get(`/api/v1/groups/${groupId}/expenses`)
+
+4️⃣ Types (src/features/**/types.ts)
+
+Every feature MUST define TypeScript types for:
+
+* API response
+* request payload
+* domain models
+
+Example:
+
+export interface Expense {
+id: string
+name: string
+amount: number
+}
+
+========================
+UI COMPONENT RULES
+==================
+
+Reusable UI components MUST be placed inside:
+
+src/components/ui
+
+Examples:
+
+Button
+Modal
+Dialog
+Input
+Avatar
+Card
+
+Before creating a new component, ALWAYS check if one already exists.
+
+DO NOT create duplicate components.
+
+========================
+FEATURE RULES
+=============
+
+Each feature MUST contain:
+
+api.ts
+hooks.ts
+types.ts
+
+Example:
+
+features/expenses/
+api.ts
+hooks.ts
+types.ts
+
+========================
+FORBIDDEN PATTERNS
+==================
+
+❌ axios inside pages
+❌ fetch inside components
+❌ React Query inside API files
+❌ business logic inside UI components
+❌ duplicate UI components
+
+========================
+REQUIRED PATTERNS
+=================
+
+✔ Page → Hook → API → Backend
+✔ Feature-based structure
+✔ React Query for all data fetching
+✔ Axios instance reused from src/api/axios.ts
+✔ Strong TypeScript typing
+
+========================
+EXAMPLE FLOW
+============
+
+User opens GroupDetailPage
+
+GroupDetailPage.tsx
+↓
+useExpenses()
+↓
+expenses/api.ts → getExpenses()
+↓
+GET /api/v1/expenses
+↓
+Backend response
