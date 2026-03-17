@@ -201,8 +201,8 @@ export const button = {
   borderRadius: borderRadius.xl,
   padding: {
     sm: `${spacing[2]} ${spacing[3]}`,
-    md: `${spacing[2.5]} ${spacing[4]}`,
-    lg: `${spacing[3]} ${spacing[6]}`,
+    md: `${spacing[3]} ${spacing[4]}`,
+    lg: `${spacing[4]} ${spacing[6]}`,
   },
   fontSize: typography.size.sm,
   fontWeight: typography.weight.medium,
