@@ -38,11 +38,27 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Skip toast for certain status codes if needed
         const status = error.response?.status;
         
-        // Don't show toast for 401 (handled by auth logic) or 404 (handled by component)
-        if (status === 401 || status === 404) {
+        // Handle 401 Unauthorized - redirect to login
+        if (status === 401) {
+            // Clear authentication data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Show message
+            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            
+            // Redirect to login page after a short delay
+            setTimeout(() => {
+                window.location.href = '/auth/login';
+            }, 1500);
+            
+            return Promise.reject(error);
+        }
+        
+        // Skip toast for 404 (handled by component)
+        if (status === 404) {
             return Promise.reject(error);
         }
 
@@ -86,6 +102,19 @@ uploadApi.interceptors.request.use(
 uploadApi.interceptors.response.use(
     (response) => response,
     (error) => {
+        const status = error.response?.status;
+        
+        // Handle 401 Unauthorized - redirect to login
+        if (status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1500);
+            return Promise.reject(error);
+        }
+        
         const message = error.response?.data?.message
             || error.message
             || 'Tải lên thất bại. Vui lòng thử lại.';
