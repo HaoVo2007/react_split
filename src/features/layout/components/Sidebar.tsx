@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         {/* Logout Button */}
         <button
-          onClick={logout}
+          onClick={() => logout()}
           className="w-full mt-4 flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
         >
           <LogOut className="w-5 h-5 transition-colors duration-200" />

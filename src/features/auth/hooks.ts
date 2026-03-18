@@ -1,90 +1,190 @@
-import { useCallback, useRef, useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { loginUser, registerUser, logoutUser, updateProfile, getCurrentUser } from './api'
-import type { LoginFormValues, RegisterFormValues, CurrentUser } from './types'
+import type { LoginFormValues, RegisterFormValues } from './types'
 import { useAuthStore } from '../../store/authStore'
+import { useLoadingStore } from '../../store/loadingStore'
 import toast from 'react-hot-toast'
 
-export const useAuthActions = () => {
+// Query keys for caching
+export const authKeys = {
+  all: ['auth'] as const,
+  user: () => [...authKeys.all, 'user'] as const,
+}
+
+// Hook for login with loading state
+export const useLogin = () => {
   const login = useAuthStore((state) => state.login)
-  const logout = useAuthStore((state) => state.logout)
-  const setCurrentUser = useAuthStore((state) => state.setCurrentUser)
+  const setLoading = useLoadingStore((state) => state.setProfileLoading)
   const navigate = useNavigate()
-
-  const handleLogout = useCallback(async () => {
-    try {
-      await logoutUser()
-      logout()
-      toast.success('Logged out successfully!')
-      navigate('/auth/login')
-    } catch {
-      // Even if API call fails, still clear local state and redirect
-      // Error toast is already shown by API interceptor
-      logout()
-      navigate('/auth/login')
+  
+  return useMutation({
+    mutationFn: (credentials: LoginFormValues) => loginUser(credentials),
+    onMutate: () => {
+      setLoading(true)
+    },
+    onSuccess: (data) => {
+      login(data)
+      toast.success('Đăng nhập thành công!')
+      navigate('/dashboard')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Đăng nhập thất bại')
+    },
+    onSettled: () => {
+      setLoading(false)
     }
-  }, [logout, navigate])
+  })
+}
 
-  const handleUpdateProfile = useCallback(async (formData: FormData): Promise<{ success: boolean; message: string; userData?: CurrentUser }> => {
-    try {
+// Hook for register with loading state
+export const useRegister = () => {
+  const login = useAuthStore((state) => state.login)
+  const setLoading = useLoadingStore((state) => state.setProfileLoading)
+  const navigate = useNavigate()
+  
+  return useMutation({
+    mutationFn: (credentials: RegisterFormValues) => registerUser(credentials),
+    onMutate: () => {
+      setLoading(true)
+    },
+    onSuccess: (data) => {
+      login(data)
+      toast.success('Đăng ký thành công!')
+      navigate('/dashboard')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Đăng ký thất bại')
+    },
+    onSettled: () => {
+      setLoading(false)
+    }
+  })
+}
+
+// Hook for fetching current user with loading state
+export const useCurrentUser = () => {
+  const setCurrentUser = useAuthStore((state) => state.setCurrentUser)
+  const setLoading = useLoadingStore((state) => state.setProfileLoading)
+  
+  return useQuery({
+    queryKey: authKeys.user(),
+    queryFn: async () => {
+      setLoading(true)
+      try {
+        const user = await getCurrentUser()
+        setCurrentUser(user)
+        return user
+      } finally {
+        setLoading(false)
+      }
+    },
+    enabled: !!localStorage.getItem('token'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Hook for logout with loading state - BLOCKS ALL UI INTERACTION
+export const useLogout = () => {
+  const logout = useAuthStore((state) => state.logout)
+  const setLogoutLoading = useLoadingStore((state) => state.setLogoutLoading)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: logoutUser,
+    onMutate: () => {
+      // Set logout loading to true - this will block all UI interactions
+      setLogoutLoading(true)
+      toast.loading('Đang đăng xuất...', { id: 'logout' })
+    },
+    onSuccess: () => {
+      // Clear all queries and auth state
+      queryClient.clear()
+      logout()
+      toast.success('Đăng xuất thành công!', { id: 'logout' })
+      navigate('/login')
+    },
+    onError: (error: Error) => {
+      // Even on error, we still logout locally
+      queryClient.clear()
+      logout()
+      toast.error(error.message || 'Đăng xuất thất bại, nhưng đã đăng xuất cục bộ', { id: 'logout' })
+      navigate('/login')
+    },
+    onSettled: () => {
+      // Always set loading to false when done
+      setLogoutLoading(false)
+    }
+  })
+}
+
+// Hook for update profile with loading state
+export const useUpdateProfile = () => {
+  const setCurrentUser = useAuthStore((state) => state.setCurrentUser)
+  const setLoading = useLoadingStore((state) => state.setProfileLoading)
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (formData: FormData) => {
+      // First update the profile
       const response = await updateProfile(formData)
-
-      // Fetch updated user data after successful profile update
+      // Then fetch the updated user data
       const userData = await getCurrentUser()
       setCurrentUser(userData)
-
-      toast.success('Profile updated successfully!')
-
+      queryClient.invalidateQueries({ queryKey: authKeys.user() })
       return { ...response, userData }
-    } catch (error) {
-      // Error toast is already shown by API interceptor
-      throw error
+    },
+    onMutate: () => {
+      setLoading(true)
+    },
+    onSuccess: () => {
+      toast.success('Cập nhật hồ sơ thành công!')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Cập nhật hồ sơ thất bại')
+    },
+    onSettled: () => {
+      setLoading(false)
     }
-  }, [setCurrentUser])
-
-  const handleLogin = useCallback(
-    async (credentials: LoginFormValues) => {
-      try {
-        const response = await loginUser(credentials)
-        login(response)
-        toast.success('Login successful! Welcome back.')
-        navigate('/dashboard')
-        return response
-      } catch (error) {
-        // Error toast is already shown by API interceptor
-        throw error
-      }
-    },
-    [login, navigate],
-  )
-
-  const handleRegister = useCallback(
-    async (credentials: RegisterFormValues) => {
-      try {
-        const response = await registerUser(credentials)
-        login(response)
-        toast.success('Account created successfully! Welcome aboard.')
-        navigate('/dashboard')
-        return response
-      } catch (error) {
-        // Error toast is already shown by API interceptor
-        throw error
-      }
-    },
-    [login, navigate],
-  )
-
-  return { login: handleLogin, register: handleRegister, logout: handleLogout, updateProfile: handleUpdateProfile }
+  })
 }
 
-type FormState<T extends Record<string, string>> = {
-  values: T
-  setField: (field: keyof T, value: string) => void
-  resetForm: () => void
+// Combined auth actions hook with loading states
+export const useAuthActions = () => {
+  const loginMutation = useLogin()
+  const registerMutation = useRegister()
+  const logoutMutation = useLogout()
+  const updateProfileMutation = useUpdateProfile()
+  
+  return {
+    // Loading states
+    isLoggingIn: loginMutation.isPending,
+    isRegistering: registerMutation.isPending,
+    isLoggingOut: logoutMutation.isPending,
+    isUpdatingProfile: updateProfileMutation.isPending,
+    
+    // Actions
+    login: loginMutation.mutateAsync,
+    register: registerMutation.mutateAsync,
+    logout: logoutMutation.mutateAsync,
+    updateProfile: updateProfileMutation.mutateAsync,
+  }
 }
 
-export const useAuthForm = <T extends Record<string, string>>(initialState: T): FormState<T> => {
-  const [values, setValues] = useState(initialState)
+// Hook to check if any auth operation is loading
+export const useAuthLoading = () => {
+  return useLoadingStore((state) => ({
+    isLoadingLogout: state.isLoadingLogout,
+    isLoadingProfile: state.isLoadingProfile,
+    isAnyLoading: state.isAnyLoading
+  }))
+}
+
+// Form state management hook
+export const useAuthForm = <T extends Record<string, string>>(initialState: T) => {
+  const [values, setValues] = useState<T>(initialState)
   const initialRef = useRef(initialState)
 
   const setField = useCallback((field: keyof T, value: string) => {

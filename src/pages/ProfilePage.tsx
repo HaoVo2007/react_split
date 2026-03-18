@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import type { FormEvent } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useAuthActions } from '../features/auth/hooks'
+import { useLoadingStore } from '../store/loadingStore'
 import { Button } from '../components/ui/Button'
 import { TextInput } from '../components/ui/TextInput'
-import { Card, CardBody } from '../components/ui/Card'
 import { Camera, User, X, Check, ImageIcon } from 'lucide-react'
 import { FE_DOMAIN } from '../config/env'
 import toast from 'react-hot-toast'
@@ -28,8 +28,11 @@ type ImageType = 'upload' | 'preset' | null
 
 const ProfilePage = () => {
   const { currentUser } = useAuthStore()
-  const { updateProfile } = useAuthActions()
+  const { updateProfile, isUpdatingProfile } = useAuthActions()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Global loading state
+  const isAnyLoading = useLoadingStore((state) => state.isAnyLoading)
 
   const [formData, setFormData] = useState({
     name: currentUser?.profile?.name || '',
@@ -47,10 +50,10 @@ const ProfilePage = () => {
   
   // UI state
   const [showPresetSelector, setShowPresetSelector] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   // Handle file upload selection
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isAnyLoading) return
     const file = event.target.files?.[0]
     if (file) {
       setImageType('upload')
@@ -66,6 +69,7 @@ const ProfilePage = () => {
 
   // Handle preset image selection
   const handlePresetSelect = (presetId: string) => {
+    if (isAnyLoading) return
     const preset = PRESET_IMAGES.find(img => img.id === presetId)
     if (preset) {
       setImageType('preset')
@@ -78,6 +82,7 @@ const ProfilePage = () => {
 
   // Clear image selection
   const handleClearImage = () => {
+    if (isAnyLoading) return
     setImageType(null)
     setSelectedImage(null)
     setSelectedPresetId(null)
@@ -89,7 +94,9 @@ const ProfilePage = () => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setIsLoading(true)
+    
+    // Prevent submission if any API is already loading
+    if (isAnyLoading) return
 
     try {
       const submitData = new FormData()
@@ -134,8 +141,6 @@ const ProfilePage = () => {
       toast.success('Cập nhật hồ sơ thành công!')
     } catch (error) {
       // Error is handled in the hook with toast
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -174,8 +179,9 @@ const ProfilePage = () => {
               {/* Change Image Button */}
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 transition-colors duration-200"
+                onClick={() => !isAnyLoading && fileInputRef.current?.click()}
+                disabled={isAnyLoading}
+                className="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
               </button>
@@ -185,7 +191,8 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   onClick={handleClearImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                  disabled={isAnyLoading}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X className="w-3 h-3 text-white" />
                 </button>
@@ -196,6 +203,7 @@ const ProfilePage = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleImageSelect}
+                disabled={isAnyLoading}
                 className="hidden"
               />
             </div>
@@ -211,9 +219,10 @@ const ProfilePage = () => {
             <div className="mt-4 flex items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={() => setShowPresetSelector(!showPresetSelector)}
+                onClick={() => !isAnyLoading && setShowPresetSelector(!showPresetSelector)}
+                disabled={isAnyLoading}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
                   showPresetSelector || selectedPresetId
                     ? "bg-white text-blue-600"
                     : "bg-white/20 text-white hover:bg-white/30"
@@ -251,9 +260,10 @@ const ProfilePage = () => {
                   <button
                     key={preset.id}
                     type="button"
-                    onClick={() => handlePresetSelect(preset.id)}
+                    onClick={() => !isAnyLoading && handlePresetSelect(preset.id)}
+                    disabled={isAnyLoading}
                     className={cn(
-                      "relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200",
+                      "relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
                       selectedPresetId === preset.id
                         ? "border-blue-500 ring-2 ring-blue-500/20"
                         : "border-slate-200 hover:border-blue-300"
@@ -287,6 +297,7 @@ const ProfilePage = () => {
                 placeholder="Nhập họ và tên của bạn"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
+                disabled={isAnyLoading}
                 required
               />
 
@@ -297,6 +308,7 @@ const ProfilePage = () => {
                 placeholder="Nhập số điện thoại của bạn"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
+                disabled={isAnyLoading}
               />
 
               <div className="flex flex-col gap-1">
@@ -309,14 +321,20 @@ const ProfilePage = () => {
                   placeholder="Nhập địa chỉ của bạn"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
+                  disabled={isAnyLoading}
                   rows={4}
-                  className="rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"
+                  className="rounded-[20px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="pt-4">
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
+                <Button 
+                  type="submit" 
+                  disabled={isUpdatingProfile || isAnyLoading} 
+                  isLoading={isUpdatingProfile}
+                  className="w-full"
+                >
+                  {isUpdatingProfile ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
                 </Button>
               </div>
             </form>
