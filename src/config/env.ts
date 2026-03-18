@@ -10,6 +10,9 @@ interface EnvConfig {
   // API Configuration
   API_URL: string
   
+  // Frontend Configuration
+  FE_DOMAIN: string
+  
   // App Configuration
   APP_NAME: string
   APP_ENV: 'local' | 'production' | 'development' | 'test'
@@ -49,6 +52,9 @@ export const env: EnvConfig = {
   // API Configuration
   API_URL: getEnvVar('VITE_API_URL', 'http://localhost:8080/api/v1'),
   
+  // Frontend Configuration
+  FE_DOMAIN: getEnvVar('VITE_FE_DOMAIN', 'http://localhost:5173'),
+  
   // App Configuration
   APP_NAME: getEnvVar('VITE_APP_NAME', 'TravelSplit'),
   APP_ENV: getEnvVar('VITE_APP_ENV', 'local') as EnvConfig['APP_ENV'],
@@ -61,6 +67,7 @@ export const env: EnvConfig = {
 
 // Export individual values for convenience
 export const API_URL = env.API_URL
+export const FE_DOMAIN = env.FE_DOMAIN
 export const APP_NAME = env.APP_NAME
 export const APP_ENV = env.APP_ENV
 export const ENABLE_DEBUG = env.ENABLE_DEBUG

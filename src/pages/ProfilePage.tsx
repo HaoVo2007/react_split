@@ -1,10 +1,30 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useAuthActions } from '../features/auth/hooks'
 import { Button } from '../components/ui/Button'
 import { TextInput } from '../components/ui/TextInput'
-import { Camera, User } from 'lucide-react'
+import { Card, CardBody } from '../components/ui/Card'
+import { Camera, User, X, Check, ImageIcon } from 'lucide-react'
+import { FE_DOMAIN } from '../config/env'
+import toast from 'react-hot-toast'
+import { cn } from '../utils/cn'
+
+// Available preset images - tất cả ảnh trong thư mục public/images
+const PRESET_IMAGES = [
+  { id: 'image1', name: 'Avatar 1', path: '/images/image1.jpg' },
+  { id: 'image2', name: 'Avatar 2', path: '/images/image2.jpg' },
+  { id: 'image3', name: 'Avatar 3', path: '/images/image3.jpg' },
+  { id: 'image4', name: 'Avatar 4', path: '/images/image4.jpg' },
+  { id: 'image5', name: 'Avatar 5', path: '/images/image5.jpg' },
+  { id: 'image6', name: 'Avatar 6', path: '/images/image6.jpg' },
+  { id: 'image7', name: 'Avatar 7', path: '/images/image7.jpg' },
+  { id: 'image8', name: 'Avatar 8', path: '/images/image8.jpg' },
+  { id: 'image9', name: 'Avatar 9', path: '/images/image9.jpg' },
+  { id: 'image10', name: 'Avatar 10', path: '/images/image10.jpg' },
+]
+
+type ImageType = 'upload' | 'preset' | null
 
 const ProfilePage = () => {
   const { currentUser } = useAuthStore()
@@ -16,21 +36,54 @@ const ProfilePage = () => {
     phone: currentUser?.profile?.phone || '',
     address: currentUser?.profile?.address || '',
   })
+  
+  // Image selection state
+  const [imageType, setImageType] = useState<ImageType>(null)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(
     currentUser?.profile?.image || null
   )
+  
+  // UI state
+  const [showPresetSelector, setShowPresetSelector] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Handle file upload selection
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setImageType('upload')
       setSelectedImage(file)
+      setSelectedPresetId(null)
       const reader = new FileReader()
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string)
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle preset image selection
+  const handlePresetSelect = (presetId: string) => {
+    const preset = PRESET_IMAGES.find(img => img.id === presetId)
+    if (preset) {
+      setImageType('preset')
+      setSelectedPresetId(presetId)
+      setSelectedImage(null)
+      setImagePreview(`${FE_DOMAIN}${preset.path}`)
+      setShowPresetSelector(false)
+    }
+  }
+
+  // Clear image selection
+  const handleClearImage = () => {
+    setImageType(null)
+    setSelectedImage(null)
+    setSelectedPresetId(null)
+    setImagePreview(currentUser?.profile?.image || null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -46,9 +99,18 @@ const ProfilePage = () => {
       submitData.append('phone', formData.phone)
       submitData.append('address', formData.address)
 
-      // Add image if selected
-      if (selectedImage) {
+      // Add image data based on selection type
+      if (imageType === 'upload' && selectedImage) {
+        // File upload
+        submitData.append('image_type', 'upload')
         submitData.append('image', selectedImage)
+      } else if (imageType === 'preset' && selectedPresetId) {
+        // Preset image - send the full URL
+        const preset = PRESET_IMAGES.find(img => img.id === selectedPresetId)
+        if (preset) {
+          submitData.append('image_type', 'preset')
+          submitData.append('image_url', `${FE_DOMAIN}${preset.path}`)
+        }
       }
 
       const result = await updateProfile(submitData)
@@ -63,8 +125,13 @@ const ProfilePage = () => {
         setImagePreview(result.userData.profile.image || null)
       }
 
-      // Reset selected image state
+      // Reset image selection state
+      setImageType(null)
       setSelectedImage(null)
+      setSelectedPresetId(null)
+      setShowPresetSelector(false)
+      
+      toast.success('Cập nhật hồ sơ thành công!')
     } catch (error) {
       // Error is handled in the hook with toast
     } finally {
@@ -104,6 +171,7 @@ const ProfilePage = () => {
                 )}
               </div>
 
+              {/* Change Image Button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -111,6 +179,17 @@ const ProfilePage = () => {
               >
                 <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
               </button>
+
+              {/* Clear Image Button (if new image selected) */}
+              {(selectedImage || selectedPresetId) && (
+                <button
+                  type="button"
+                  onClick={handleClearImage}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              )}
 
               <input
                 ref={fileInputRef}
@@ -127,7 +206,76 @@ const ProfilePage = () => {
             <p className="text-blue-100 text-sm mt-1">
               {currentUser?.email}
             </p>
+
+            {/* Image Selection Options */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPresetSelector(!showPresetSelector)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                  showPresetSelector || selectedPresetId
+                    ? "bg-white text-blue-600"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                )}
+              >
+                <ImageIcon className="w-4 h-4" />
+                {selectedPresetId ? 'Đã chọn ảnh có sẵn' : 'Chọn ảnh có sẵn'}
+              </button>
+            </div>
+
+            {/* Image Type Indicator */}
+            {imageType && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-xs text-white">
+                {imageType === 'upload' ? (
+                  <>
+                    <Camera className="w-3 h-3" />
+                    <span>Ảnh tải lên mới</span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-3 h-3" />
+                    <span>Ảnh có sẵn</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Preset Image Selector */}
+          {showPresetSelector && (
+            <div className="px-4 sm:px-8 py-4 bg-slate-50 border-b border-slate-200">
+              <p className="text-sm font-medium text-slate-700 mb-3">Chọn ảnh đại diện có sẵn:</p>
+              <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                {PRESET_IMAGES.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handlePresetSelect(preset.id)}
+                    className={cn(
+                      "relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200",
+                      selectedPresetId === preset.id
+                        ? "border-blue-500 ring-2 ring-blue-500/20"
+                        : "border-slate-200 hover:border-blue-300"
+                    )}
+                  >
+                    <img
+                      src={`${FE_DOMAIN}${preset.path}`}
+                      alt={preset.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {selectedPresetId === preset.id && (
+                      <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Form Section */}
           <div className="p-4 sm:p-8">
