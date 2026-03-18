@@ -1060,7 +1060,7 @@ const GroupDetailPage = () => {
 
       {/* Add Expense Modal - Mobile Responsive */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div className="fixed p-3 inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Thêm chi phí</h2>

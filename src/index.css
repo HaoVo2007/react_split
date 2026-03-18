@@ -31,6 +31,21 @@ a {
   color: inherit;
 }
 
+/* Prevent mobile zoom on input focus - iOS Safari fix */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+@media (min-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 0.875rem !important; /* 14px on desktop */
+  }
+}
+
 ::selection {
   background-color: rgba(59, 130, 246, 0.6);
   color: white;
