@@ -30,6 +30,11 @@ const balanceKeys = {
   byGroup: (groupId: string) => ['balance', 'group', groupId] as const,
 }
 
+// Dashboard keys for invalidation
+const dashboardKeys = {
+  all: ['dashboard'] as const,
+}
+
 /**
  * Hook to fetch expenses by group ID
  */
@@ -64,6 +69,8 @@ export const useCreateExpense = () => {
       toast.success('Expense added successfully!')
       // Invalidate all expense queries to refetch
       queryClient.invalidateQueries({ queryKey: expensesKeys.all })
+      // Invalidate dashboard to update overview stats
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
     },
     // Error toast is already shown by API interceptor
   })

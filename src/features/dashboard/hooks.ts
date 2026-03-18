@@ -1,19 +1,30 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getDashboardSummary } from './api'
 import type { DashboardData } from './types'
 
-const dashboardKeys = {
+// Query keys for caching
+export const dashboardKeys = {
   all: ['dashboard'] as const,
   summary: () => [...dashboardKeys.all, 'summary'] as const,
 }
 
 /**
- * Hook to fetch dashboard summary data
+ * Hook to fetch dashboard summary
  */
 export const useDashboardSummary = () => {
   return useQuery<DashboardData, Error>({
     queryKey: dashboardKeys.summary(),
-    queryFn: getDashboardSummary,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => getDashboardSummary(),
   })
+}
+
+/**
+ * Hook to manually refetch dashboard
+ */
+export const useRefetchDashboard = () => {
+  const queryClient = useQueryClient()
+  
+  return () => {
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+  }
 }

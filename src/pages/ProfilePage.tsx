@@ -331,7 +331,6 @@ const ProfilePage = () => {
                 <Button 
                   type="submit" 
                   disabled={isUpdatingProfile || isAnyLoading} 
-                  isLoading={isUpdatingProfile}
                   className="w-full"
                 >
                   {isUpdatingProfile ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
