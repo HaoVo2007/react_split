@@ -104,14 +104,14 @@ export const useLogout = () => {
       queryClient.clear()
       logout()
       toast.success('Đăng xuất thành công!', { id: 'logout' })
-      navigate('/login')
+      navigate('/auth/login')
     },
     onError: (error: Error) => {
       // Even on error, we still logout locally
       queryClient.clear()
       logout()
       toast.error(error.message || 'Đăng xuất thất bại, nhưng đã đăng xuất cục bộ', { id: 'logout' })
-      navigate('/login')
+      navigate('/auth/login')
     },
     onSettled: () => {
       // Always set loading to false when done
