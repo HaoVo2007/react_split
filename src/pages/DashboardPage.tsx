@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useDashboardSummary } from '../features/dashboard/hooks'
 import {
   PieChart,
   Pie,
@@ -24,8 +24,7 @@ import {
   Group,
   UserCircle,
 } from 'lucide-react'
-import { getDashboardSummary } from '../features/dashboard/api'
-import type { DashboardData } from '../features/dashboard/types'
+// Type is inferred from the hook
 import { Card, CardHeader, CardBody, StatsCard } from '../components/ui'
 import { LoadingSpinner, EmptyState } from '../components/ui'
 import { cn } from '../utils/cn'
@@ -40,10 +39,7 @@ const formatCurrency = (amount: number): string => {
 
 
 const DashboardPage = () => {
-  const { data: dashboard, isLoading, error } = useQuery<DashboardData, Error>({
-    queryKey: ['dashboard-summary'],
-    queryFn: getDashboardSummary,
-  })
+  const { data: dashboard, isLoading, error } = useDashboardSummary()
 
   if (isLoading) {
     return (

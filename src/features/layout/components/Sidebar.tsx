@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../../store/authStore'
 import { useAuthActions } from '../../../features/auth/hooks'
+import { useRefetchDashboard } from '../../../features/dashboard/hooks'
 import { Home, Users, User, SplitSquareHorizontal, LogOut, X } from 'lucide-react'
 
 interface SidebarProps {
@@ -12,6 +13,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation()
   const { currentUser } = useAuthStore()
   const { logout } = useAuthActions()
+  const refetchDashboard = useRefetchDashboard()
 
   const isActive = (path: string) => location.pathname === path
 
@@ -20,6 +22,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { label: 'Nhóm của bạn', path: '/groups', icon: Users },
     { label: 'Hồ sơ', path: '/profile', icon: User },
   ]
+
+  // Handle dashboard click - refetch summary data
+  const handleDashboardClick = () => {
+    refetchDashboard()
+    onClose()
+  }
 
   // Determine display name
   const displayName = currentUser?.profile?.name || currentUser?.email || 'Người dùng'
@@ -57,11 +65,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         {menuItems.map((item) => {
           const IconComponent = item.icon
           const active = isActive(item.path)
+          const isDashboard = item.path === '/dashboard'
+
           return (
             <Link
               key={item.path}
               to={item.path}
-              onClick={onClose}
+              onClick={isDashboard ? handleDashboardClick : onClose}
               className={`group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                 active
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform scale-[1.02]'
@@ -86,12 +96,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <img
               src={avatarUrl}
               alt={displayName}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 border-2 border-white shadow-sm"
+              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
             />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate">
+            <p className="font-semibold text-slate-900 text-sm truncate">
               {displayName}
             </p>
             <p className="text-xs text-slate-500 truncate">

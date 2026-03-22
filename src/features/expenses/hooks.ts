@@ -65,12 +65,20 @@ export const useCreateExpense = () => {
 
   return useMutation({
     mutationFn: (formData: FormData) => addExpense(formData),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success('Expense added successfully!')
       // Invalidate all expense queries to refetch
       queryClient.invalidateQueries({ queryKey: expensesKeys.all })
       // Invalidate dashboard to update overview stats
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+      // Invalidate balance queries
+      queryClient.invalidateQueries({ queryKey: balanceKeys.all })
+      
+      // Get groupId from formData for targeted balance invalidation
+      const groupId = variables.get('group_id')
+      if (groupId) {
+        queryClient.invalidateQueries({ queryKey: balanceKeys.byGroup(groupId as string) })
+      }
     },
     // Error toast is already shown by API interceptor
   })
@@ -85,10 +93,20 @@ export const useUpdateExpense = () => {
   return useMutation({
     mutationFn: ({ expenseId, formData }: { expenseId: string; formData: FormData }) =>
       updateExpense(expenseId, formData),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success('Expense updated successfully!')
       // Invalidate all expense queries to refetch
       queryClient.invalidateQueries({ queryKey: expensesKeys.all })
+      // Invalidate dashboard to update overview stats
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+      // Invalidate balance queries
+      queryClient.invalidateQueries({ queryKey: balanceKeys.all })
+      
+      // Get groupId from formData for targeted balance invalidation
+      const groupId = variables.formData.get('group_id')
+      if (groupId) {
+        queryClient.invalidateQueries({ queryKey: balanceKeys.byGroup(groupId as string) })
+      }
     },
     // Error toast is already shown by API interceptor
   })
