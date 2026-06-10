@@ -24,10 +24,11 @@ export function useGroups() {
 
     try {
       const response = await api.get<ApiResponse<GroupsResponse>>("/groups")
-      const { total_groups, total_paid, total_owed, groups: groupsList } = response.data
+      const responseData = (response as any).data || response
+      const { total_groups, total_paid, total_owed, groups: groupsList } = responseData
 
-      setGroups(groupsList)
-      setStats({ total_groups, total_paid, total_owed })
+      setGroups(groupsList || [])
+      setStats({ total_groups: total_groups || 0, total_paid: total_paid || 0, total_owed: total_owed || 0 })
     } catch (err: any) {
       setError(err.response?.data?.message || "Lỗi khi tải danh sách nhóm")
     } finally {

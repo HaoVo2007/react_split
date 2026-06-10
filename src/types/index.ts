@@ -37,13 +37,13 @@ export interface Group {
 
 export interface CreateGroupRequest {
   name: string
-  description: string
+  description?: string
   image?: File
 }
 
 export interface UpdateGroupRequest {
   name: string
-  description: string
+  description?: string
   image?: File
 }
 

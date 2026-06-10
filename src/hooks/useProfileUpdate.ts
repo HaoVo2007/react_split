@@ -38,17 +38,18 @@ export function useProfileUpdate() {
       )
 
       // Update localStorage with new profile
-      if (response.data.profile) {
+      const responseData = (response as any).data || response
+      if (responseData.profile) {
         localStorage.setItem(
           "userProfile",
           JSON.stringify({
-            name: response.data.profile.name || null,
-            image: response.data.profile.image || null,
+            name: responseData.profile.name || null,
+            image: responseData.profile.image || null,
           })
         )
       }
 
-      return response.data
+      return responseData
     } catch (err: any) {
       const message = err.response?.data?.message || "Cập nhật hồ sơ thất bại"
       setError(message)

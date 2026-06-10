@@ -104,8 +104,12 @@ export function useExpenses() {
       formData.append("amount", String(data.amount))
       formData.append("category", data.category)
       formData.append("group_id", data.group_id)
-      formData.append("paid_by", data.paid_by)
       formData.append("date", data.date)
+      
+      // paid_by là array, append từng element
+      data.paid_by.forEach((paidById) => {
+        formData.append("paid_by", paidById)
+      })
       
       data.participants.forEach((participantId) => {
         formData.append("participants", participantId)
@@ -145,8 +149,12 @@ export function useExpenses() {
       formData.append("amount", String(data.amount))
       formData.append("category", data.category)
       formData.append("group_id", data.group_id)
-      formData.append("paid_by", data.paid_by)
       formData.append("date", data.date)
+      
+      // paid_by là array, append từng element
+      data.paid_by.forEach((paidById) => {
+        formData.append("paid_by", paidById)
+      })
       
       data.participants.forEach((participantId) => {
         formData.append("participants", participantId)

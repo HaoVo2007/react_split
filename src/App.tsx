@@ -7,7 +7,6 @@ import { ProfilePage } from "@/pages/ProfilePage"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute"
 import { BottomNavigation } from "@/components/layout/BottomNavigation"
-import "./App.css"
 
 function App() {
   return (

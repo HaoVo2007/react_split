@@ -1,5 +1,5 @@
 import { formatMoney } from "@/lib/utils"
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
+import { TrendingUp, TrendingDown } from "lucide-react"
 
 interface BalanceSummaryProps {
   totalPaid: number

@@ -34,10 +34,10 @@ export function useGroupMembers() {
     setError(null)
     try {
       const response = await api.get<GroupMembersResponse>(`/groups/${groupId}/members`)
-      const apiMembers = response?.data || []
+      const apiMembers = ((response as any).data?.data || (response as any).data || []) as ApiGroupMember[]
       
       // Transform API response to GroupMember format
-      const membersList: GroupMember[] = apiMembers.map(member => ({
+      const membersList: GroupMember[] = apiMembers.map((member: ApiGroupMember) => ({
         id: member.id,
         email: member.email,
         role: member.role,

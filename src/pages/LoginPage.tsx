@@ -17,7 +17,6 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",

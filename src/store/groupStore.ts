@@ -22,7 +22,8 @@ export const useGroupStore = create<GroupStore>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const response = await api.get<ApiResponse<Group[]>>("/groups")
-      set({ groups: response.data, isLoading: false })
+      const groupsData = (response as any).data || response
+      set({ groups: Array.isArray(groupsData) ? groupsData : groupsData.groups || [], isLoading: false })
     } catch (error) {
       set({ error: "Lấy danh sách nhóm thất bại", isLoading: false })
     }
@@ -39,8 +40,9 @@ export const useGroupStore = create<GroupStore>((set) => ({
         name,
         description,
       })
+      const groupData = (response as any).data || response
       set((state) => ({
-        groups: [...state.groups, response.data],
+        groups: [...state.groups, groupData],
         isLoading: false,
       }))
     } catch (error) {

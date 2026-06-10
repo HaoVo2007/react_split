@@ -31,7 +31,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
         { email, password }
       )
 
-      const { token, refresh_token, ...userData } = response.data
+      const authData = (response as any).data || response
+      const { token, refresh_token, ...userData } = authData
 
       localStorage.setItem("token", token)
       localStorage.setItem("refresh_token", refresh_token)
@@ -79,7 +80,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
         { email, password, confirm_password }
       )
 
-      const { token, refresh_token, ...userData } = response.data
+      const authData = (response as any).data || response
+      const { token, refresh_token, ...userData } = authData
 
       localStorage.setItem("token", token)
       localStorage.setItem("refresh_token", refresh_token)

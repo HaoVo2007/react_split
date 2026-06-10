@@ -1,5 +1,5 @@
 import { GroupBalance } from "@/types"
-import { TrendingUp, TrendingDown, DollarSign, ArrowLeft } from "lucide-react"
+import { TrendingUp, TrendingDown, ArrowLeft } from "lucide-react"
 
 interface BalanceSummaryProps {
   balance: GroupBalance

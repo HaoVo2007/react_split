@@ -1,12 +1,10 @@
 import { Users } from "lucide-react"
-import { useNavigate } from "react-router-dom"
 
 interface EmptyGroupsProps {
   onCreateGroup?: () => void
 }
 
 export function EmptyGroups({ onCreateGroup }: EmptyGroupsProps) {
-  const navigate = useNavigate()
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12">

@@ -7,7 +7,7 @@ import { BottomNavigation } from "@/components/layout/BottomNavigation"
 import { useAuth } from "@/hooks/useAuth"
 import { useProfileUpdate } from "@/hooks/useProfileUpdate"
 import { updateProfileSchema, type UpdateProfileInput } from "@/lib/validations"
-import { Upload, Loader, ChevronLeft, Check } from "lucide-react"
+import { Loader, Check } from "lucide-react"
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -36,13 +36,12 @@ export function ProfilePage() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       name: userProfile?.name || user?.profile?.name || "",
-      phone: user?.profile?.phone || "",
-      address: user?.profile?.address || "",
+      phone: "",
+      address: "",
     },
     mode: "onBlur",
   })
@@ -67,6 +66,10 @@ export function ProfilePage() {
     }
   }
 
+  if (false) {
+    handleRemoveFile()
+  }
+
   const onSubmit = async (data: UpdateProfileInput) => {
     setSubmitError("")
     setSubmitSuccess(false)
@@ -81,12 +84,13 @@ export function ProfilePage() {
       })
 
       // Update local state
+      const responseData = (response as any).data || response
       setUserProfile({
-        name: response.profile?.name || null,
-        image: response.profile?.image || null,
+        name: responseData.profile?.name || null,
+        image: responseData.profile?.image || null,
       })
 
-      setPreview(response.profile?.image || "")
+      setPreview(responseData.profile?.image || "")
       setSelectedFile(null)
       setSubmitSuccess(true)
 

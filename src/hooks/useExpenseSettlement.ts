@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import api from "@/lib/api"
 import { GroupMember } from "@/types"
 
-interface SettlementMember {
+export interface SettlementMember {
   user_id: string
   name: string
   image: string | null
@@ -13,7 +13,7 @@ interface SettlementMember {
   status: "creditor" | "debtor"
 }
 
-interface ExpenseSettlement {
+export interface ExpenseSettlement {
   from_user: GroupMember
   to_user: GroupMember
   amount: number

@@ -4,7 +4,7 @@ import { Message } from "@/types"
 
 export function useChat(groupId: string) {
   const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
 
   useEffect(() => {
     socket.emit("join_group", { groupId })

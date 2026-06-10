@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
 import api from "@/lib/api"
-import { GroupBalance, GroupBalanceResponse } from "@/types"
+import { GroupBalance } from "@/types"
 
 interface BalanceApiResponse {
   success: boolean
@@ -19,7 +19,7 @@ export function useGroupBalance() {
 
     try {
       const response = await api.get<BalanceApiResponse>(`/expenses/group/${groupId}/balance`)
-      const balanceData = response?.data || null
+      const balanceData = ((response as any).data?.data || (response as any).data) as GroupBalance
       setBalance(balanceData)
       return balanceData
     } catch (err: any) {
