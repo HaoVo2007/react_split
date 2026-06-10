@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 0.5rem;
+}
+
+* {
+  @apply border-slate-100;
+}
+
+body {
+  @apply bg-[#F8FAFF] text-slate-900;
+  font-feature-settings: "rounding" 1;
+}
+
+@layer base {
+  h1 {
+    @apply text-2xl font-bold text-slate-900 font-display;
+  }
+  h2 {
+    @apply text-base font-semibold text-slate-900 font-body;
+  }
+  p {
+    @apply text-sm text-slate-500 font-body;
+  }
+}

@@ -1,0 +1,249 @@
+---
+description: UI/UX rules cho SplitTrip frontend — bắt buộc áp dụng cho mọi component
+globs: ["src/**/*.tsx", "src/**/*.ts"]
+alwaysApply: true
+---
+
+# 🎨 SPLITTRIP — UI RULES (BẮT BUỘC)
+
+## Stack & Libraries
+
+- Framework: React 18 + TypeScript (strict mode)
+- Styling: Tailwind CSS v3 — KHÔNG dùng inline style
+- UI Components: shadcn/ui — ưu tiên dùng trước khi tự build
+- Icons: lucide-react DUY NHẤT — không import icon từ thư viện khác
+- Forms: react-hook-form + zod validation
+- HTTP: axios instance từ `@/lib/api.ts`
+- State: zustand cho global state
+
+---
+
+## 🎨 Màu sắc — KHÔNG bao giờ hardcode
+
+Luôn dùng CSS variable hoặc Tailwind class. Mapping như sau:
+
+| Mục đích               | Tailwind class            | Hex tham chiếu |
+|------------------------|---------------------------|----------------|
+| Nút chính / CTA        | `bg-[#4F7CFF]`            | #4F7CFF        |
+| Nút hover              | `hover:bg-[#3D6AEE]`      | #3D6AEE        |
+| Background nhẹ primary | `bg-[#EEF2FF]`            | #EEF2FF        |
+| Số tiền dương (owed)   | `text-emerald-600`        | #22C55E        |
+| Số tiền âm (owe)       | `text-red-500`            | #EF4444        |
+| Card background        | `bg-white`                |                |
+| Page background        | `bg-[#F8FAFF]`            | #F8FAFF        |
+| Border                 | `border-slate-200`        | #E2E8F0        |
+| Text chính             | `text-slate-900`          | #0F172A        |
+| Text phụ               | `text-slate-500`          | #475569        |
+| Text mờ                | `text-slate-400`          | #94A3B8        |
+
+---
+
+## 🧩 Component Patterns — Copy chính xác
+
+### Card chuẩn
+```tsx
+<div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+```
+
+### Button primary
+```tsx
+<Button className="bg-[#4F7CFF] hover:bg-[#3D6AEE] text-white rounded-lg font-medium">
+```
+
+### Button secondary / ghost
+```tsx
+<Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg">
+```
+
+### Input field
+```tsx
+<Input className="rounded-lg border-slate-200 focus-visible:ring-[#4F7CFF]" />
+```
+
+### Badge số tiền — dương (người khác nợ mình)
+```tsx
+<span className="text-emerald-600 font-semibold text-sm bg-emerald-50 px-2 py-0.5 rounded-full">
+  +{formatMoney(amount)}
+</span>
+```
+
+### Badge số tiền — âm (mình nợ người khác)
+```tsx
+<span className="text-red-500 font-semibold text-sm bg-red-50 px-2 py-0.5 rounded-full">
+  -{formatMoney(amount)}
+</span>
+```
+
+### Avatar với fallback
+```tsx
+<Avatar className="h-9 w-9">
+  <AvatarImage src={user.avatar} />
+  <AvatarFallback className="bg-[#EEF2FF] text-[#4F7CFF] font-semibold text-sm">
+    {getInitials(user.name)}
+  </AvatarFallback>
+</Avatar>
+```
+
+### Empty state
+```tsx
+<div className="flex flex-col items-center justify-center py-16 text-center">
+  <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+    <IconName className="w-7 h-7 text-slate-400" />
+  </div>
+  <p className="text-slate-900 font-semibold mb-1">Chưa có dữ liệu</p>
+  <p className="text-slate-500 text-sm">Mô tả ngắn hành động tiếp theo</p>
+</div>
+```
+
+### Loading skeleton
+```tsx
+<div className="space-y-3">
+  {Array.from({ length: 3 }).map((_, i) => (
+    <Skeleton key={i} className="h-20 rounded-2xl" />
+  ))}
+</div>
+```
+
+### Edit/Delete action buttons — dùng cho card items
+```tsx
+<div className="flex gap-2 flex-shrink-0">
+  {onEdit && (
+    <button
+      onClick={() => onEdit(item)}
+      className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+      aria-label="Edit"
+    >
+      <Edit className="w-4 h-4 text-slate-600" />
+    </button>
+  )}
+  {onDelete && (
+    <button
+      onClick={() => onDelete(item.id)}
+      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+      aria-label="Delete"
+    >
+      <Trash2 className="w-4 h-4 text-red-500" />
+    </button>
+  )}
+</div>
+```
+
+### Delete confirmation dialog
+**Sử dụng component**: `DeleteConfirmDialog` từ `@/components/shared/DeleteConfirmDialog`
+```tsx
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog"
+
+// Usage
+<DeleteConfirmDialog
+  isOpen={isDeleteDialogOpen}
+  title="Xóa"
+  description="Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn."
+  itemName={itemName}
+  isLoading={isDeleting}
+  error={deleteError}
+  onClose={() => setIsDeleteDialogOpen(false)}
+  onConfirm={handleConfirmDelete}
+/>
+```
+
+### Balance Summary Card - 3 cột
+**Sử dụng component**: `BalanceSummary` từ `@/components/balance/BalanceSummary`
+Hiển thị: Tổng chi phí, Đã thanh toán, Còn nợ
+```tsx
+<BalanceSummary balance={groupBalance} />
+```
+
+### Members Balance Card
+**Sử dụng component**: `MembersBalance` từ `@/components/balance/MembersBalance`
+Hiển thị từng thành viên: Avatar, tên, email, số dư, trạng thái (Người cho vay/Người vay)
+```tsx
+<MembersBalance members={groupBalance.members} />
+```
+
+### Settlements Card - Thanh toán cần thực hiện
+**Sử dụng component**: `Settlements` từ `@/components/balance/Settlements`
+Hiển thị: Người vay → Người cho vay + số tiền
+```tsx
+<Settlements settlements={groupBalance.settlements} />
+```
+
+### Add Member Card - Thêm thành viên vào group
+**Sử dụng component**: `AddMemberCard` từ `@/components/groups/AddMemberCard`
+Hiển thị: Input nhập email + button Add, với error/success messages
+```tsx
+<AddMemberCard 
+  groupId={groupId}
+  onMemberAdded={() => {
+    // Callback khi thêm thành viên thành công
+  }}
+/>
+```
+
+### Special Case (Specific Amount) - Chi phí một người trả toàn bộ
+**Trong**: `CreateExpenseModal` từ `@/components/expenses/CreateExpenseModal`
+Khi tích checkbox "Một người trả toàn bộ cho nhóm":
+- Hiển thị dropdown để chọn người trả
+- Input nhập số tiền người đó trả
+- Request gửi lên với `participant_splits: [{"user_id":"...", "amount":...}]`
+- Nếu không tích: gửi `participant_splits: ""`
+
+---
+
+## 📐 Layout Rules
+
+- Sidebar: `w-60 fixed left-0 top-0 h-screen bg-white border-r border-slate-100`
+- Main content: `ml-60 min-h-screen bg-[#F8FAFF]`
+- Page container: `max-w-4xl mx-auto px-6 py-8`
+- Section gap: `space-y-6`
+- Card grid (2 col): `grid grid-cols-1 md:grid-cols-2 gap-4`
+
+---
+
+## ✍️ Typography Rules
+
+- Font heading (h1, h2, số tiền lớn): `font-['Plus_Jakarta_Sans'] font-bold`
+- Font body/paragraph: `font-['DM_Sans']`
+- Page title: `text-2xl font-bold text-slate-900`
+- Section title: `text-base font-semibold text-slate-900`
+- Label: `text-sm font-medium text-slate-700`
+- Caption / muted: `text-xs text-slate-400`
+- Số tiền lớn (balance): `text-3xl font-bold font-['Plus_Jakarta_Sans']`
+
+---
+
+## ⚡ Bắt buộc cho mọi component
+
+1. **Loading state**: Mọi component fetch data đều có skeleton loading
+2. **Empty state**: Mọi list đều có empty state với icon + message
+3. **Error handling**: Wrap API call trong try/catch, hiển thị toast error
+4. **TypeScript**: Không dùng `any`. Định nghĩa interface rõ ràng trong `src/types/index.ts`
+5. **Responsive**: Mobile-first. Sidebar ẩn trên mobile, dùng Sheet
+6. **Accessibility**: Button phải có `aria-label` nếu chỉ có icon
+
+---
+
+## 📁 Import alias
+
+Luôn dùng alias `@/` thay vì relative path:
+```ts
+// ✅ Đúng
+import { Button } from "@/components/ui/button"
+import { COLORS } from "@/lib/design-tokens"
+
+// ❌ Sai
+import { Button } from "../../components/ui/button"
+```
+
+---
+
+## 🚫 Tuyệt đối không làm
+
+- Không hardcode màu hex trực tiếp trong JSX (trừ custom color từ design-tokens)
+- Không dùng `style={{}}` inline trừ khi không thể dùng Tailwind
+- Không import icon từ `react-icons`, `heroicons`, hay bất kỳ lib nào ngoài `lucide-react`
+- Không tạo component mới nếu shadcn/ui đã có
+- Không bỏ qua loading state và empty state
+- Không dùng `useState` cho server data — dùng custom hook
+- Không gọi API trực tiếp trong component — gọi qua `src/lib/api.ts`
+- Không cần tạo các file .md để hướng dẫn sử dụng giao diện 
+- Những UI đã tạo trước đó nếu không được đề cập chỉnh sửa thì giữ nguyên không tự ý chỉnh sửa
