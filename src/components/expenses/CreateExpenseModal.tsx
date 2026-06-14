@@ -504,7 +504,7 @@ export function CreateExpenseModal({
                             placeholder="0"
                             step="1000"
                             min="0"
-                            className="w-24 px-2 py-1.5 rounded border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] focus:border-transparent transition-all"
+                            className="w-24 px-2 py-1.5 rounded border border-slate-300 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] focus:border-transparent transition-all"
                             disabled={isSubmitting}
                           />
                         </div>
